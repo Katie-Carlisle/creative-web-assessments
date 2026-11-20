@@ -14,96 +14,152 @@
 import 'dotenv/config'; // reads the .env file into process.env
 import express from 'express';
 import mongoose from 'mongoose';
-import * as sketchData from './lib/sketchData.js';
+import * as plantData from './lib/plantData.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+const validLightNeeds = ['low', 'medium', 'bright'];
 
 // Parses incoming JSON request bodies into req.body.
 app.use(express.json());
 
 // A request logger, handy when two servers are running side by side.
 app.use((req, res, next) => {
-	console.log(`[sketch-api] ${req.method} ${req.path}`);
+	console.log(`[plant-api] ${req.method} ${req.path}`);
 	next();
 });
 
 // --- GET /api/sketches — list every sketch ---------------------------------
-app.get('/api/sketches', async (req, res) => {
-	try {
-		// await means: pause here until the database answers, then carry on.
-		const sketches = await sketchData.getAll();
-		res.json(sketches);
-	} catch (err) {
-		console.error('Failed to read sketches:', err.message);
-		res.status(500).json({ error: 'Could not read sketches' });
-	}
+app.get('/api/plants', async (req, res) => {
+    try {
+        const light = req.query.light;
+
+        if (light && !validLightNeeds.includes(light)) {
+            return res.status(400).json({
+                error: 'Light must be low, medium or bright'
+            });
+        }
+
+        const plants = await plantData.getAll(light);
+
+        res.json(plants);
+
+    } catch (err) {
+        console.error('Failed to retrieve plants:', err.message);
+
+        res.status(500).json({
+            error: 'Could not retrieve plants'
+        });
+    }
 });
 
 // --- POST /api/sketches — add a new sketch ----------------------------------
-app.post('/api/sketches', async (req, res) => {
-	try {
-		// With no Content-Type header, req.body is undefined, so check first.
-		if (!req.body) {
-			return res.status(400).json({ error: 'title, artist and colorTag are all required' });
-		}
+app.post('/api/plants', async (req, res) => {
+    try {
+        if (!req.body) {
+            return res.status(400).json({
+                error: 'Plant information is required'
+            });
+        }
 
-		const { title, artist, colorTag } = req.body;
+        const { name, species, lightNeeds } = req.body;
 
-		// 400 = Bad Request: the caller left out something we need.
-		if (!title || !artist || !colorTag) {
-			return res.status(400).json({ error: 'title, artist and colorTag are all required' });
-		}
+        if (
+            typeof name !== 'string' || !name.trim() ||
+            typeof species !== 'string' || !species.trim() ||
+            !validLightNeeds.includes(lightNeeds)
+        ) {
+            return res.status(400).json({
+                error: 'Name, species and valid light requirements are required'
+            });
+        }
 
-		const newSketch = await sketchData.create({ title, artist, colorTag });
+        const newPlant = await plantData.create({
+            name: name.trim(),
+            species: species.trim(),
+            lightNeeds
+        });
 
-		// 201 = Created: it worked AND a new sketch now exists.
-		res.status(201).json(newSketch);
-	} catch (err) {
-		console.error('Failed to create sketch:', err.message);
-		res.status(500).json({ error: 'Could not create sketch' });
-	}
+        res.status(201).json(newPlant);
+
+    } catch (err) {
+        console.error('Failed to create plant:', err.message);
+
+        res.status(500).json({
+            error: 'Could not create plant'
+        });
+    }
 });
 
 // --- PATCH /api/sketches/:id — change some fields of one sketch --------------
 // The URL says WHICH sketch (:id). The JSON body says WHAT to change,
 // e.g. { "favourite": true }.
-app.patch('/api/sketches/:id', async (req, res) => {
-	try {
-		if (!req.body) {
-			return res.status(400).json({ error: 'a JSON body of changes is required' });
-		}
+app.patch('/api/plants/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
 
-		// The id stays as text: MongoDB ids are text, so there is no Number() here.
-		const updated = await sketchData.update(req.params.id, req.body);
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(404).json({
+                error: 'Plant not found'
+            });
+        }
 
-		// 404 = Not Found: the request was fine, but no sketch has this id.
-		if (!updated) {
-			return res.status(404).json({ error: `No sketch found with id ${req.params.id}` });
-		}
+        if (typeof req.body?.swapped !== 'boolean') {
+            return res.status(400).json({
+                error: 'A boolean swapped value is required'
+            });
+        }
 
-		res.json(updated);
-	} catch (err) {
-		console.error('Failed to update sketch:', err.message);
-		res.status(500).json({ error: 'Could not update sketch' });
-	}
+        const updated = await plantData.update(id, {
+            swapped: req.body.swapped
+        });
+
+        if (!updated) {
+            return res.status(404).json({
+                error: 'Plant not found'
+            });
+        }
+
+        res.json(updated);
+
+    } catch (err) {
+        console.error('Failed to update plant:', err.message);
+
+        res.status(500).json({
+            error: 'Could not update plant'
+        });
+    }
 });
 
 // --- DELETE /api/sketches/:id — remove one sketch ----------------------------
-app.delete('/api/sketches/:id', async (req, res) => {
-	try {
-		const removed = await sketchData.remove(req.params.id);
+app.delete('/api/plants/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
 
-		if (!removed) {
-			return res.status(404).json({ error: `No sketch found with id ${req.params.id}` });
-		}
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(404).json({
+                error: 'Plant not found'
+            });
+        }
 
-		// 204 = No Content: it worked, and there is nothing left to send back.
-		res.status(204).send();
-	} catch (err) {
-		console.error('Failed to delete sketch:', err.message);
-		res.status(500).json({ error: 'Could not delete sketch' });
-	}
+        const removed = await plantData.remove(id);
+
+        if (!removed) {
+            return res.status(404).json({
+                error: 'Plant not found'
+            });
+        }
+
+        res.status(204).send();
+
+    } catch (err) {
+        console.error('Failed to delete plant:', err.message);
+
+        res.status(500).json({
+            error: 'Could not delete plant'
+        });
+    }
 });
 
 // --- Connect to MongoDB, then start listening --------------------------------
@@ -111,18 +167,26 @@ app.delete('/api/sketches/:id', async (req, res) => {
 // part of that string. The collection comes from the model's name (see
 // models/Sketch.js).
 async function start() {
-	try {
-		// await means: pause here until Atlas answers, then carry on.
-		await mongoose.connect(process.env.MONGODB_URI);
-		console.log('Connected to MongoDB');
-	} catch (err) {
-		console.error('Could not connect to MongoDB. Check MONGODB_URI in .env:', err.message);
-		process.exit(1);
-	}
+    try {
+        if (!process.env.MONGODB_URI) {
+            throw new Error('MONGODB_URI is missing from .env');
+        }
 
-	app.listen(PORT, () => {
-		console.log(`Sketch Gallery API listening on http://localhost:${PORT}`);
-	});
+        await mongoose.connect(process.env.MONGODB_URI);
+
+        console.log('Connected to MongoDB');
+
+    } catch (err) {
+        console.error('Could not connect to MongoDB:', err.message);
+
+        process.exit(1);
+    }
+
+    app.listen(PORT, () => {
+        console.log(
+            `Plant Swap Shelf API listening on http://localhost:${PORT}`
+        );
+    });
 }
 
 start();
