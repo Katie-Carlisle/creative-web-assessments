@@ -1,13 +1,3 @@
-/**
- * lib/sketchData.js — all the database work for sketches.
- * ------------------------------------------------------------------
- * index.js (the routes) never talks to MongoDB itself. It calls one of
- * these four functions, and they use the Sketch model to do the work.
- *
- * Each function is async, because the database takes time to answer.
- * The routes in index.js use await to wait for the answer.
- * ------------------------------------------------------------------
- */
 
 import Plant from '../models/Plant.js';
 

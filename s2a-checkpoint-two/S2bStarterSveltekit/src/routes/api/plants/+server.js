@@ -1,13 +1,4 @@
-/**
- * src/routes/api/sketches/+server.js — add a sketch (POST /api/sketches)
- * ------------------------------------------------------------------
- * The gallery page's form fetches THIS route. It is inside our own
- * SvelteKit app, on the same address the browser is already using. It
- * forwards the request to Express using sketchApi.js.
- *
- * (The routes for ONE sketch, PATCH and DELETE, are in [id]/+server.js.)
- * ------------------------------------------------------------------
- */
+
 
 import { json } from '@sveltejs/kit';
 import { createPlant} from '#lib/server/plantApi.js';
@@ -26,7 +17,7 @@ export async function POST({ request }) {
 	try {
 		// await means: pause here until Express has answered, then carry on.
 		const newPlant = await createPlant(data);
-		// 201 = Created: it worked AND a new sketch now exists.
+
 		return json(newPlant, { status: 201 });
 	} catch (err) {
 		console.error('Failed to create plant:', err.message);

@@ -1,21 +1,10 @@
-/**
- * models/Sketch.js — the SCHEMA and the MODEL for a sketch.
- * ------------------------------------------------------------------
- * A schema describes the shape of one document: which fields it has,
- * their types, and which are required.
- *
- * A model is made from the schema. It is what the rest of the code uses
- * to talk to the database. The model's name decides the collection:
- * Mongoose lowercases it and makes it plural, so 'Sketch' is stored in
- * a collection called "sketches".
- * ------------------------------------------------------------------
- */
+
 
 import mongoose from 'mongoose';
 
 const plantSchema = new mongoose.Schema(
 	{
-		title: { type: String, required: true, trim: true},
+		name: { type: String, required: true, trim: true},
 		species: { type: String, required: true, trim: true },
 		lightNeeds: { type: String, required: true,  enum: ['low', 'medium', 'bright'] },
 		swapped: { type: Boolean, default: false }

@@ -1,17 +1,4 @@
-/**
- * src/routes/api/sketches/[id]/+server.js — change or delete ONE sketch
- * ------------------------------------------------------------------
- *   PATCH  /api/sketches/<id> — change some fields (the favourite star)
- *   DELETE /api/sketches/<id> — remove it (the ✕ button)
- *
- * The folder name [id] means any value in that part of the URL is
- * allowed, and SvelteKit gives it to us as params.id. Same shape as
- * ../+server.js: forward the request to Express with sketchApi.js.
- *
- * params.id is text, and a MongoDB id is text too, so we pass it on
- * exactly as it is.
- * ------------------------------------------------------------------
- */
+
 
 import { json } from '@sveltejs/kit';
 import { updatePlant, deletePlant } from '#lib/server/plantApi.js';
@@ -27,7 +14,6 @@ export async function PATCH({ params, request }) {
 	try {
 		const updated = await updatePlant(params.id, changes);
 
-		// 404 = Not Found: Express answered, but no sketch has this id.
 		if (!updated) {
 			 return json({ error: 'Plant not found' }, { status: 404 });
 		}

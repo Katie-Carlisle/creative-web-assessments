@@ -1,9 +1,9 @@
 <main>
-	<h1>Sketch Gallery</h1>
+	<h1>Plant Swap Shelf</h1>
 	<p>
-		A SvelteKit app that talks to a separate Express API, which saves to MongoDB.
+		A shelf for swapping plants
 	</p>
-	<p><a href="/gallery">→ View the Sketch Gallery</a></p>
+	<p><a href="/shelf">→ View the Plant Shelf</a></p>
 </main>
 
 <style>

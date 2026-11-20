@@ -1,7 +1,7 @@
 {
 	"name": "s2b-starter-express",
 	"version": "1.0.0",
-	"description": "Sketch Gallery API: Express and Mongoose, saving to MongoDB Atlas",
+	"description": "Plant Swap API",
 	"type": "module",
 	"main": "index.js",
 	"scripts": {

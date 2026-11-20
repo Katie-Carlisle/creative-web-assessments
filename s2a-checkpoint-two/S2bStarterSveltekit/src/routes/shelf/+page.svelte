@@ -19,9 +19,7 @@
         plants = data.plants;
     });
 
-	// ADD — the form. A plain fetch() to OUR OWN /api/sketches route
-	// (src/routes/api/sketches/+server.js), never straight to Express.
-	// SvelteKit forwards it to Express.
+
 	async function handleSubmit(event) {
         event.preventDefault();
 
@@ -64,10 +62,7 @@
             submitting = false;
         }
     }
-
-	// UPDATE — the favourite star. A PATCH to OUR OWN /api/sketches/<id>
-	// route (src/routes/api/sketches/[id]/+server.js), sending only the
-	// field that changes.
+	
 	async function toggleSwapped(plant) {
         listError = '';
 

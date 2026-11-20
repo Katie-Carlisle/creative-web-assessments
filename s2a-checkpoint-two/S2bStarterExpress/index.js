@@ -1,15 +1,4 @@
-/**
- * index.js — the Sketch Gallery API (Express).
- * ------------------------------------------------------------------
- * This is a separate program from the SvelteKit app, with its own
- * package.json, its own port and its own .env.
- *
- * It connects to MongoDB Atlas, then answers four routes. Each route
- * checks the request, calls ONE function from ./lib/sketchData.js, and
- * sends back the result with a status code. The database work lives in
- * sketchData.js, not here.
- * ------------------------------------------------------------------
- */
+
 
 import 'dotenv/config'; // reads the .env file into process.env
 import express from 'express';
@@ -30,7 +19,7 @@ app.use((req, res, next) => {
 	next();
 });
 
-// --- GET /api/sketches — list every sketch ---------------------------------
+
 app.get('/api/plants', async (req, res) => {
     try {
         const light = req.query.light;
@@ -54,7 +43,7 @@ app.get('/api/plants', async (req, res) => {
     }
 });
 
-// --- POST /api/sketches — add a new sketch ----------------------------------
+
 app.post('/api/plants', async (req, res) => {
     try {
         if (!req.body) {
@@ -92,9 +81,39 @@ app.post('/api/plants', async (req, res) => {
     }
 });
 
-// --- PATCH /api/sketches/:id — change some fields of one sketch --------------
-// The URL says WHICH sketch (:id). The JSON body says WHAT to change,
-// e.g. { "favourite": true }.
+
+// --- GET /api/plants/:id — retrieve one individual plant ----------------
+app.get('/api/plants/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(404).json({
+                error: 'Plant not found'
+            });
+        }
+
+        const plant = await plantData.getById(id);
+
+        if (!plant) {
+            return res.status(404).json({
+                error: 'Plant not found'
+            });
+        }
+
+        res.json(plant);
+
+    } catch (err) {
+        console.error('Failed to retrieve plant:', err.message);
+
+        res.status(500).json({
+            error: 'Could not retrieve plant'
+        });
+    }
+});
+
+
+
 app.patch('/api/plants/:id', async (req, res) => {
     try {
         const id = req.params.id;
@@ -132,7 +151,7 @@ app.patch('/api/plants/:id', async (req, res) => {
     }
 });
 
-// --- DELETE /api/sketches/:id — remove one sketch ----------------------------
+
 app.delete('/api/plants/:id', async (req, res) => {
     try {
         const id = req.params.id;
@@ -162,10 +181,7 @@ app.delete('/api/plants/:id', async (req, res) => {
     }
 });
 
-// --- Connect to MongoDB, then start listening --------------------------------
-// The connection string (MONGODB_URI) comes from .env. The database name is
-// part of that string. The collection comes from the model's name (see
-// models/Sketch.js).
+
 async function start() {
     try {
         if (!process.env.MONGODB_URI) {
