@@ -10,7 +10,7 @@
  */
 
 import { json } from '@sveltejs/kit';
-import { createSketch } from '#lib/server/sketchApi.js';
+import { createPlant} from '#lib/server/plantApi.js';
 
 export async function POST({ request }) {
 	// request.json() reads the JSON body the page sent. If the body is
@@ -25,14 +25,13 @@ export async function POST({ request }) {
 
 	try {
 		// await means: pause here until Express has answered, then carry on.
-		const newSketch = await createSketch(data);
-
+		const newPlant = await createPlant(data);
 		// 201 = Created: it worked AND a new sketch now exists.
-		return json(newSketch, { status: 201 });
+		return json(newPlant, { status: 201 });
 	} catch (err) {
-		console.error('Failed to create sketch via Express:', err.message);
+		console.error('Failed to create plant:', err.message);
 
 		// 502 = Bad Gateway: we could not get an answer from Express.
-		return json({ error: 'Could not reach the Sketch API' }, { status: 502 });
+		return json({ error: 'Could not create new plant' }, { status: 502 });
 	}
 }
